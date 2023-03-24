@@ -29,5 +29,13 @@ pub enum Action {
         name: String,
     },
 
+    Update {
+        #[clap()]
+        name: String,
+
+        #[clap(short, long, default_value = "latest")]
+        version: String,
+    },
+
     Versions,
 }

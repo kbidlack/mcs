@@ -4,7 +4,7 @@ use std::{fs, path};
 
 use serde_json::Value;
 
-use crate::utils::fetch_server_jar_url;
+use crate::utils::{fetch_server_jar_url, get_latest_version};
 use crate::utils::{MCSERVERS_DIR, VERSION_MANIFEST_URL};
 
 pub fn create(name: &String, version: &str) {
@@ -15,7 +15,14 @@ pub fn create(name: &String, version: &str) {
         process::exit(0);
     }
 
-    let server_jar_link: String = fetch_server_jar_url(version);
+    let latest = &get_latest_version();
+    let server_version = if version == "latest" {
+        latest.as_str().unwrap()
+    } else {
+        version
+    };
+
+    let server_jar_link: String = fetch_server_jar_url(server_version);
     let mut server_jar = reqwest::blocking::get(server_jar_link.as_str()).unwrap();
 
     fs::create_dir(&server_folder).unwrap();
@@ -24,7 +31,9 @@ pub fn create(name: &String, version: &str) {
 
     server_jar.copy_to(&mut server_jar_file).unwrap();
 
-    println!("Created server '{name}'! Launch it with `mcs launch {name}`.")
+    println!(
+        "Created server '{name}' on version {server_version}! Launch it with `mcs launch {name}`."
+    )
 }
 
 pub fn launch(name: &String) {
@@ -121,6 +130,33 @@ pub fn remove(name: &String) {
 
     fs::remove_dir_all(&server_folder).unwrap();
     println!("Removed server '{name}'!")
+}
+
+pub fn update(name: &String, version: &str) {
+    let server_folder = format!("{}/{}", *MCSERVERS_DIR, name);
+
+    if !path::Path::new(&server_folder).exists() {
+        eprintln!("Server {name} does not exist!");
+        process::exit(0);
+    }
+
+    let latest = &get_latest_version();
+    let server_version = if version == "latest" {
+        latest.as_str().unwrap()
+    } else {
+        version
+    };
+
+    let server_jar_link = fetch_server_jar_url(server_version);
+    let mut server_jar = reqwest::blocking::get(server_jar_link.as_str()).unwrap();
+
+    let server_jar_path = format!("{server_folder}/server.jar");
+    fs::remove_file(server_jar_path.clone()).unwrap();
+
+    let mut server_jar_file = fs::File::create(server_jar_path).unwrap();
+    server_jar.copy_to(&mut server_jar_file).unwrap();
+
+    println!("Updated server {name} to version {server_version}!");
 }
 
 pub fn versions() {

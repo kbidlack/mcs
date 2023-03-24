@@ -12,6 +12,14 @@ lazy_static! {
     };
 }
 
+pub fn get_latest_version() -> Value {
+    // download version manifest
+    let body = reqwest::blocking::get(VERSION_MANIFEST_URL).unwrap();
+
+    let manifest_json: Value = serde_json::from_str(&body.text().unwrap()).unwrap();
+    manifest_json["latest"]["release"].clone()
+}
+
 pub fn default_mcservers_dir() -> String {
     let mcservers_dir: String = match home::home_dir() {
         Some(path) => format!("{}/.mcservers", path.display()),
@@ -35,18 +43,11 @@ pub fn fetch_server_jar_url(desired_version: &str) -> String {
 
     let manifest_json: Value = serde_json::from_str(&body.text().unwrap()).unwrap();
     let versions: &Value = &manifest_json["versions"];
-    let latest = &manifest_json["latest"]["release"].as_str();
-
-    let server_version = if desired_version == "latest" {
-        latest.unwrap()
-    } else {
-        desired_version
-    };
 
     let array = versions.as_array().unwrap();
 
     for version in array {
-        if version["id"] == server_version {
+        if version["id"] == desired_version {
             let version_url = version["url"].as_str().unwrap();
             let resp = reqwest::blocking::get(version_url).unwrap();
 
@@ -59,6 +60,6 @@ pub fn fetch_server_jar_url(desired_version: &str) -> String {
         };
     }
 
-    eprintln!("Cannot find a server file for version {server_version}!");
+    eprintln!("Cannot find a server file for version {desired_version}!");
     process::exit(0);
 }
