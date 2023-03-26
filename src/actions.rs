@@ -1,7 +1,10 @@
-use std::io::{self, Write};
+use std::cmp::min;
+use std::fmt;
+use std::io::{self, Read, Write};
 use std::process::{self, Command};
 use std::{fs, path};
 
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use serde_json::Value;
 
 use crate::utils::{fetch_server_jar_url, get_latest_version};
@@ -22,14 +25,39 @@ pub fn create(name: &String, version: &str) {
         version
     };
 
+    // download server jar
     let server_jar_link: String = fetch_server_jar_url(server_version);
-    let mut server_jar = reqwest::blocking::get(server_jar_link.as_str()).unwrap();
+    let mut response = reqwest::blocking::get(server_jar_link.as_str()).unwrap();
 
     fs::create_dir(&server_folder).unwrap();
     let server_jar_path = format!("{server_folder}/server.jar");
     let mut server_jar_file = fs::File::create(server_jar_path).unwrap();
 
-    server_jar.copy_to(&mut server_jar_file).unwrap();
+    let total_size = response.content_length().unwrap();
+    let mut downloaded: u64 = 0;
+
+    let pb = ProgressBar::new(total_size);
+    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+        .unwrap()
+        .with_key("eta", |state: &ProgressState, w: &mut dyn fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .progress_chars("#>-"));
+
+    loop {
+        let mut buffer = [0; 1024];
+        let bytes_read = response.read(&mut buffer).unwrap();
+
+        if bytes_read == 0 {
+            break;
+        };
+
+        server_jar_file.write_all(&buffer[..bytes_read]).unwrap();
+
+        let new = min(downloaded + 1024, total_size);
+        downloaded = new;
+        pb.set_position(downloaded);
+    }
+
+    pb.finish_with_message("downloaded");
 
     println!(
         "Created server '{name}' on version {server_version}! Launch it with `mcs launch {name}`."
