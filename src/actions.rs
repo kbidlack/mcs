@@ -4,7 +4,7 @@ use std::{fs, path};
 
 use serde_json::Value;
 
-use crate::utils::{fetch_server_jar_url, get_latest_version, download_with_pb};
+use crate::utils::{download_with_pb, fetch_server_jar_url, get_latest_version};
 use crate::utils::{MCSERVERS_DIR, VERSION_MANIFEST_URL};
 
 pub fn create(name: &String, version: &str) {
@@ -125,8 +125,16 @@ pub fn remove(name: &String) {
         process::exit(0);
     }
 
-    fs::remove_dir_all(&server_folder).unwrap();
-    println!("Removed server '{name}'!")
+    let mut want_to_remove = String::new();
+    print!("Are you sure you want to remove '{name}'? (y/n) ");
+
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut want_to_remove).unwrap();
+
+    if want_to_remove == "y\n" {
+        fs::remove_dir_all(&server_folder).unwrap();
+        println!("Removed server '{name}'!")
+    }
 }
 
 pub fn update(name: &String, version: &str) {

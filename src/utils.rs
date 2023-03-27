@@ -1,7 +1,7 @@
-use std::{env, fs, path, process};
-use std::io::{Read, Write};
 use std::cmp::min;
 use std::fmt;
+use std::io::{Read, Write};
+use std::{env, fs, path, process};
 
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use lazy_static::lazy_static;
@@ -41,8 +41,8 @@ pub fn default_mcservers_dir() -> String {
     mcservers_dir
 }
 
-pub fn download_with_pb(url: &String, path: &String) {
-    let mut response = reqwest::blocking::get(url.as_str()).unwrap();
+pub fn download_with_pb(url: &str, path: &String) {
+    let mut response = reqwest::blocking::get(url).unwrap();
     let total_size: u64 = response.content_length().unwrap();
     let mut downloaded: u64 = 0;
 
@@ -50,14 +50,14 @@ pub fn download_with_pb(url: &String, path: &String) {
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
         .unwrap()
         .with_key("eta", |state: &ProgressState, w: &mut dyn fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
-        .progress_chars("#>-")); 
+        .progress_chars("#>-"));
 
     let mut file = fs::File::create(path).unwrap();
 
     loop {
         let mut buffer = [0; 1024];
         let bytes_read = response.read(&mut buffer).unwrap();
-        
+
         if bytes_read == 0 {
             break;
         }
