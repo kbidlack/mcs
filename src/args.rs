@@ -29,6 +29,14 @@ pub enum Action {
         name: String,
     },
 
+    Rename {
+        #[clap()]
+        from: String,
+
+        #[clap()]
+        to: String,
+    },
+
     Update {
         #[clap()]
         name: String,

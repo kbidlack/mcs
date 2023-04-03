@@ -137,6 +137,20 @@ pub fn remove(name: &String) {
     }
 }
 
+pub fn rename(from: &String, to: &String) {
+    let old_server_folder = format!("{}/{}", *MCSERVERS_DIR, from);
+    let new_server_folder = format!("{}/{}", *MCSERVERS_DIR, to);
+
+    if !path::Path::new(&old_server_folder).exists() {
+        eprintln!("Server '{from}' does not exist!");
+        process::exit(0);
+    }
+
+    fs::rename(old_server_folder, new_server_folder).unwrap();
+
+    println!("Renamed server '{from}' to '{to}'!");
+}
+
 pub fn update(name: &String, version: &str) {
     let server_folder = format!("{}/{}", *MCSERVERS_DIR, name);
 
