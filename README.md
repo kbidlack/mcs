@@ -1,7 +1,5 @@
 # `mcs` - A command line Minecraft server launcher
-If you're like me, at some point you've realized that self hosting Minecraft servers can be quite tedious sometimes. While this problem has already been solved in various ways on the client side, with the official launcher provided by Mojang as well as many third party launchers that extend its functionality, I haven't seen many good solutions out there for servers.
-
-So, this is my attempt to make creating, updating, removing, and everything else related to Minecraft servers super easy and intuitive. My goal is to make it as portable as possible, so you can run a Minecraft server whenever and wherever you need to without too much hassle. It's all written in Rust, however this *is* my first Rust project, so it won't be the best code you've seen.
+A command line Minecraft server launcher I made in rust to learn rust and to make my life slightly easier
 
 ## Usage
 It's a standard cargo project, so to install it clone the repository and run `cargo build --release` to build the binary.
